@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">ITEQ</string>
+    <string name="title_location">定位</string>
+    <string name="title_order">订单</string>
+    <string name="title_statistics">统计</string>
+    <string name="title_notice">公告</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
