@@ -1,4 +1,4 @@
-package com.example.iteq;
+package com.example.iteq.Fragment;
 
 import android.content.Context;
 import android.net.Uri;
@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.iteq.R;
 
 
 public class NoticeFragment extends Fragment {
