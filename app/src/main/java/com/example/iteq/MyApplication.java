@@ -8,6 +8,8 @@ import com.tencent.bugly.Bugly;
 
 import org.litepal.LitePal;
 
+import cn.bmob.v3.Bmob;
+
 public class MyApplication extends Application {
     @Override
     public void onCreate() {
@@ -16,5 +18,6 @@ public class MyApplication extends Application {
         Bugly.init(this, "58e868ed1c", false);
         SDKInitializer.initialize(this);
         SDKInitializer.setCoordType(CoordType.BD09LL);
+        Bmob.initialize(this, "27d2ab6ae2ee8589c8c40ee369cfd6cd");
     }
 }

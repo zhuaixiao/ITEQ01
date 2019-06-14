@@ -1,9 +1,7 @@
 package com.example.iteq.Fragment;
 
 import android.Manifest;
-import android.animation.ObjectAnimator;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,16 +35,19 @@ import com.baidu.trace.model.OnTraceListener;
 import com.baidu.trace.model.PushMessage;
 import com.example.iteq.R;
 import com.tbruyelle.rxpermissions2.RxPermissions;
+import com.trello.rxlifecycle2.components.support.RxFragment;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import io.reactivex.Observable;
 import io.reactivex.functions.Consumer;
 
 
-public class LocationFragment extends Fragment implements View.OnClickListener {
+public class LocationFragment extends RxFragment implements View.OnClickListener {
     private View mView;
     private Unbinder unbinder;
     @BindView(R.id.bmapView)
@@ -79,6 +80,7 @@ public class LocationFragment extends Fragment implements View.OnClickListener {
     public void onResume() {
         super.onResume();
         mMapView.onResume();
+        initTrace();
     }
 
     @Override
@@ -95,7 +97,8 @@ public class LocationFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        mTraceClient.stopTrace(mTrace, null);
+        mTraceClient.stopTrace(mTrace, mTraceListener);
+        mTraceClient = null;
         mLocationClient.stop();
         mBaiduMap.setMyLocationEnabled(false);
         mMapView.onDestroy();
@@ -138,14 +141,21 @@ public class LocationFragment extends Fragment implements View.OnClickListener {
         String entityName = "ID150222";
         boolean isNeedObjectStorage = false;
         mTrace = new Trace(serviceId, entityName, isNeedObjectStorage);
+
         mTraceClient = new LBSTraceClient(getActivity());
         // 定位周期(单位:秒)
         int gatherInterval = 5;
         // 打包回传周期(单位:秒)
         int packInterval = 10;
         mTraceClient.setInterval(gatherInterval, packInterval);
-        mTraceClient.setOnTraceListener(mTraceListener);
-        mTraceClient.startTrace(mTrace, null);
+        mTraceClient.startTrace(mTrace, mTraceListener);
+        Observable.interval(5, TimeUnit.SECONDS).compose(bindToLifecycle()).subscribe(new Consumer<Long>() {
+            @Override
+            public void accept(Long aLong) throws Exception {
+                queryEntity();
+            }
+        });
+
     }
 
     //获取最近一天线设备
@@ -176,9 +186,7 @@ public class LocationFragment extends Fragment implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
-        ObjectAnimator.ofFloat(mRefreshButton, "rotation", 0f, 359f).setDuration(900).start();
         initPermission();
-        queryEntity();
     }
 
 
@@ -198,7 +206,6 @@ public class LocationFragment extends Fragment implements View.OnClickListener {
             latLng = new LatLng(location.getLatitude(), location.getLongitude());
             MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newLatLngZoom(latLng, 12f);
             mBaiduMap.setMapStatus(mapStatusUpdate);
-            initTrace();
         }
     }
 
@@ -206,53 +213,57 @@ public class LocationFragment extends Fragment implements View.OnClickListener {
 
         @Override
         public void onBindServiceCallback(int i, String s) {
+
         }
 
         @Override
         public void onStartTraceCallback(int i, String s) {
             if (i == 0) {
-                mTraceClient.startGather(null);
+                mTraceClient.startGather(this);
             }
         }
 
         @Override
         public void onStopTraceCallback(int i, String s) {
-            mTraceClient.stopGather(null);
+            mTraceClient.stopGather(this);
 
         }
 
         @Override
         public void onStartGatherCallback(int i, String s) {
 
+
         }
 
         @Override
         public void onStopGatherCallback(int i, String s) {
-
         }
 
         @Override
         public void onPushCallback(byte b, PushMessage pushMessage) {
+
         }
 
         @Override
         public void onInitBOSCallback(int i, String s) {
+
         }
     };
     // 初始化监听器
     public OnEntityListener entityListener = new OnEntityListener() {
         @Override
         public void onEntityListCallback(EntityListResponse response) {
+            Log.e(TAG, "onEntityListCallback: ");
             if (response.getSize() > 0) {
                 //定义Maker坐标点
+                Log.e(TAG, "onEntityListCallback: " + response.getSize());
                 List<EntityInfo> infos = response.getEntities();
                 for (EntityInfo i : infos
                 ) {
                     LatLng latLng = new LatLng(i.getLatestLocation().getLocation().getLatitude(), i.getLatestLocation().getLocation().getLongitude());
                     showPerson(latLng);
+
                 }
-            } else {
-                Toast.makeText(getActivity(), "最近一天无人员登录！", Toast.LENGTH_SHORT).show();
             }
         }
     };
@@ -261,8 +272,8 @@ public class LocationFragment extends Fragment implements View.OnClickListener {
         BitmapDescriptor bitmap = BitmapDescriptorFactory
                 .fromResource(R.drawable.person);
         OverlayOptions option = new MarkerOptions()
-                .position(latLng)
                 .perspective(true)
+                .position(latLng)
                 .icon(bitmap);
         mBaiduMap.addOverlay(option);
     }

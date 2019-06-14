@@ -84,8 +84,8 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:launchMode="singleTask"
             android:configChanges="keyboard|screenLayout|screenSize|orientation"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait" />
         <activity
             android:name="com.tencent.bugly.beta.ui.BetaActivity"
@@ -101,13 +101,18 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+        <provider
+            android:name="cn.bmob.v3.util.BmobContentProvider"
+            android:authorities="com.example.iteq.BmobContentProvider"></provider>
+
         <service
             android:name="com.baidu.trace.LBSTraceService"
             android:enabled="true"
-            android:process=":remote"/>
-        <service android:name="com.baidu.location.f"
+            android:process=":remote" />
+        <service
+            android:name="com.baidu.location.f"
             android:enabled="true"
-            android:process=":remote"/>
+            android:process=":remote" />
     </application>
 
 </manifest>
